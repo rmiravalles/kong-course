@@ -1,0 +1,15 @@
+_format_version: "3.0"
+
+services:
+  - name: api
+    url: http://api:8000
+    routes:
+      - name: api-route
+        paths:
+          - /api
+        strip_path: true
+      - name: health-route
+        paths:
+          - /health
+        strip_path: false
+    
