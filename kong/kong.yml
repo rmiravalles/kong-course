@@ -8,8 +8,26 @@ services:
         paths:
           - /api
         strip_path: true
+        plugins:
+          - name: key-auth
+            config:
+              key_names:
+                - X-API-Key
       - name: health-route
         paths:
           - /health
         strip_path: false
-    
+      - name: admin-route
+        paths:
+          - /admin
+        strip_path: false
+        plugins:
+          - name: request-termination
+            config:
+              status_code: 403
+              message: "Access denied"
+
+consumers:
+  - username: client-a
+    keyauth_credentials:
+      - key: abc123
