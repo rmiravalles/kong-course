@@ -13,6 +13,11 @@ services:
             config:
               key_names:
                 - X-API-Key
+          - name: rate-limiting
+            config:
+              minute: 5
+              limit_by: consumer
+              policy: local
       - name: health-route
         paths:
           - /health
@@ -31,3 +36,7 @@ consumers:
   - username: client-a
     keyauth_credentials:
       - key: abc123
+  - username: client-b
+    keyauth_credentials:
+      - key: def456
+  
