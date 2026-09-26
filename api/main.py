@@ -1,4 +1,8 @@
 from fastapi import FastAPI, Request
+import asyncio
+import logging
+
+logger = logging.getLogger(__name__)
 
 app = FastAPI()
 
@@ -23,3 +27,11 @@ def health():
 @app.get("/admin")
 def admin():
     return {"message": "Restricted area!"}
+
+
+@app.get("/slow")
+async def slow():
+    logger.warning("Starting slow endpoint")
+    await asyncio.sleep(5)
+    logger.warning("Finished slow endpoint")
+    return {"message": "This was slow!"}
