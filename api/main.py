@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, Response
 import asyncio
 import logging
 
@@ -35,3 +35,19 @@ async def slow():
     await asyncio.sleep(5)
     logger.warning("Finished slow endpoint")
     return {"message": "This was slow!"}
+
+
+attempts = 0
+
+@app.get("/unstable")
+async def unstable():
+    global attempts
+    attempts += 1
+
+    if attempts == 1:
+        return Response (
+            content='{"message":"Temporary failure"}',
+            status_code=503,
+            media_type="application/json"
+        )
+    return {"message": "Success", "attempt": attempts}

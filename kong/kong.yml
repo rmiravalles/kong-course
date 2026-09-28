@@ -6,6 +6,7 @@ services:
     connect_timeout: 1000
     read_timeout: 2000
     write_timeout: 1000
+    retries: 2
     routes:
       - name: api-route
         paths:
