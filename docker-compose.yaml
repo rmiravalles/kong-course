@@ -1,8 +1,15 @@
 services:
-  api:
-    build: ./api
-    expose:
-      - "8000"
+  api-1:
+    build: .
+    container_name: api-1
+    environment:
+      INSTANCE_NAME: api-1
+
+  api-2:
+    build: .
+    container_name: api-2
+    environment:
+      INSTANCE_NAME: api-2
 
   kong:
     image: kong:latest

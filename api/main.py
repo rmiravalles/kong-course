@@ -1,6 +1,7 @@
 from fastapi import FastAPI, Request, Response
 import asyncio
 import logging
+import os
 
 logger = logging.getLogger(__name__)
 
@@ -14,9 +15,14 @@ def root():
     }
 
 
+INSTANCE_NAME = os.getenv("INSTANCE_NAME", "unknown")
+
 @app.get("/test")
 async def test(request: Request):
-    return dict(request.headers)
+    return {
+        "instance": INSTANCE_NAME,
+        "headers": dict(request.headers)
+    }
 
 
 @app.get("/health")

@@ -1,8 +1,15 @@
 _format_version: "3.0"
 
+upstreams:
+  - name: api-upstream
+    targets:
+      - target: api-1:8000
+      - target: api-2:8000
+
 services:
   - name: api
-    url: http://api:8000
+    host: api-upstream
+    port: 8000
     connect_timeout: 1000
     read_timeout: 2000
     write_timeout: 1000
