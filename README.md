@@ -6,13 +6,12 @@ The course starts with plain HTTP and a local API, then adds Kong as the gateway
 
 ## What you will learn
 
-- How HTTP requests, methods, paths, headers, and status codes fit together
-- How an API exposes resources and behavior
-- How FastAPI serves endpoints
-- How Kong matches routes and forwards requests to upstream services
-- How `strip_path` changes the path received by the upstream
-- How to add gateway plugins such as key authentication and rate limiting
-- How to inspect, test, secure, and observe an API gateway
+- How to read HTTP requests, responses, status codes, and error sources
+- How FastAPI endpoints and request headers work
+- How Kong routes, services, upstreams, targets, and `strip_path` fit together
+- How Kong plugins provide API-key authentication, per-consumer rate limits, and request termination
+- How service timeouts, retries, replicas, and active health checks interact
+- How to inspect configuration and debug requests using logs and the Admin API
 
 ## Prerequisites
 
@@ -33,18 +32,14 @@ cd kong-course
 docker compose up -d --build
 ```
 
-Verify the API directly inside the Docker network through Kong:
+Verify the API through Kong. The API containers are reachable only inside the Compose network:
 
 ```bash
-curl -i http://localhost:8100/api/
-curl -i http://localhost:8100/api/test
+curl -i -H 'X-API-Key: abc123' http://localhost:8100/api/
+curl -i -H 'X-API-Key: abc123' http://localhost:8100/api/test
 ```
 
-The expected response from the second command is:
-
-```json
-{"message":"Hello from /test"}
-```
+The `/api/test` response is JSON containing the selected replica name and the request headers received by FastAPI. The values can differ between requests.
 
 Stop the stack when you are done:
 
@@ -85,9 +80,11 @@ Work through the lessons in order. Each lesson has a goal, a small experiment, a
 
 | URL | Purpose |
 | --- | --- |
-| `http://localhost:8100/api/` | Public route to the FastAPI root endpoint |
-| `http://localhost:8100/api/test` | Public route to the FastAPI test endpoint |
-| `http://localhost:8101` | Kong Admin API |
+| `http://localhost:8100/api/` | FastAPI root endpoint; requires `X-API-Key` |
+| `http://localhost:8100/api/test` | Replica and request-header details; requires `X-API-Key` |
+| `http://localhost:8100/health` | Health endpoint routed through Kong |
+| `http://localhost:8100/admin` | Demonstration route terminated with `403` |
+| `http://localhost:8101` | Unauthenticated Kong Admin API; local development only |
 | `http://localhost:8101/routes` | Inspect loaded routes |
 | `http://localhost:8101/services` | Inspect loaded services |
 
@@ -97,4 +94,4 @@ Make one change at a time, predict the result, run the request, and compare it w
 
 ## Next projects
 
-After completing the lessons, try adding a versioned API (`/v1`), a second upstream service, a consumer with API-key authentication, a rate limit, health checks, and a CI job that starts the stack and exercises the public endpoints.
+After completing the lessons, try adding a versioned API (`/v1`), a separate upstream service, shared rate-limit storage for multiple Kong nodes, passive health checks, TLS, and a CI job that starts the stack and exercises the public endpoints.

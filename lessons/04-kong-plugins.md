@@ -2,31 +2,56 @@
 
 ## Goal
 
-Use the gateway to apply behavior that should not be repeated in every upstream service.
+See how plugins apply authentication, traffic policy, and rejection at the gateway without adding those concerns to FastAPI endpoints.
 
-Kong plugins are attached to services, routes, or consumers. Common examples are authentication, rate limiting, CORS, request transformation, and logging.
+## Plugin scope
 
-As a first experiment, add a rate-limiting plugin under the `api` service in `kong/kong.yml`:
+Plugins can be attached at different scopes. In the current `kong/kong.yml`, the plugins are attached directly to routes:
 
-```yaml
-    plugins:
-      - name: rate-limiting
-        config:
-          minute: 5
-          policy: local
-```
+- `key-auth` and `rate-limiting` are on `api-route`.
+- `request-termination` is on `admin-route`.
+- `health-route` has no authentication plugin, so it remains available for probes and this exercise.
 
-Recreate Kong and make several requests:
+Route scope limits where a plugin applies. The `/admin` termination plugin returns a response from Kong and prevents this route from reaching the FastAPI `/admin` handler.
+
+## API-key authentication
+
+The configured credential for `client-a` is `abc123`; `client-b` uses `def456`. Try a request without a key, then with a valid one:
 
 ```bash
-docker compose up -d --force-recreate kong
+curl -i http://localhost:8100/api/test
+curl -i -H 'X-API-Key: abc123' http://localhost:8100/api/test
+```
+
+The `key_names` setting tells the plugin to look for the credential in the `X-API-Key` header. The sample credentials are committed to the repository for training and must not be reused as real credentials.
+
+## Per-consumer rate limiting
+
+The route allows five requests per minute per consumer, using the `local` policy. Because `limit_by` is `consumer`, requests from the two configured consumers have separate counters:
+
+```bash
 for request in 1 2 3 4 5 6; do
-  curl -s -o /dev/null -w "%{http_code}\n" http://localhost:8100/api/test
+  curl -s -o /dev/null -w "%{http_code}\n" \
+    -H 'X-API-Key: abc123' http://localhost:8100/api/test
 done
 ```
 
-Remove the plugin when the experiment is complete so later lessons start from the basic route.
+Expect the first requests to succeed and a request over the configured limit to return `429`. A local counter is appropriate for this one-Kong-node exercise; multiple gateway nodes need a shared strategy if the limit must be consistent across nodes.
+
+## Gateway rejection
+
+Try the `/admin` path:
+
+```bash
+curl -i http://localhost:8100/admin
+```
+
+The request-termination plugin responds with `403` and `Access denied`. The path matches a Kong route, but the request is terminated before the FastAPI handler runs.
 
 ## Checkpoint
 
-Explain why a gateway-level rate limit can protect multiple upstream endpoints without changing FastAPI code.
+For each plugin, identify its route scope, the behavior it adds, and one observable response that demonstrates it. Explain how consumer-based rate limiting differs from a single shared counter.
+
+## Evolution note
+
+Commit `dcaf6c2` added key authentication, a consumer, and the `/admin` rejection route. Commit `300bd44` added consumer-based rate limiting and a second consumer.
