@@ -2,6 +2,17 @@ _format_version: "3.0"
 
 upstreams:
   - name: api-upstream
+    healthchecks:
+      active:
+        http_path: /health
+        timeout: 1
+        healthy:
+          interval: 5
+          successes: 2
+        unhealthy:
+          interval: 2
+          http_failures: 2
+          timeouts: 2
     targets:
       - target: api-1:8000
       - target: api-2:8000
