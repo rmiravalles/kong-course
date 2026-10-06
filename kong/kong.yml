@@ -15,7 +15,9 @@ upstreams:
           timeouts: 2
     targets:
       - target: api-1:8000
+        weight: 100
       - target: api-2:8000
+        weight: 50
 
 services:
   - name: api
